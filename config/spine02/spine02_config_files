@@ -1,0 +1,327 @@
+/etc/network/interfaces
+=======================
+# This file describes the network interfaces available on your system
+# and how to activate them. For more information, see interfaces(5).
+
+source /etc/network/interfaces.d/*.intf
+
+# The loopback network interface
+auto lo
+iface lo inet loopback
+    address 10.0.0.22/32
+
+# The primary network interface
+auto eth0
+iface eth0 inet dhcp
+
+auto swp1
+iface swp1
+
+auto swp2
+iface swp2
+
+auto swp3
+iface swp3
+
+auto swp4
+iface swp4
+
+
+/etc/hostname
+=============
+spine02
+
+
+/etc/hosts
+==========
+127.0.0.1	spine02	spine02
+127.0.0.1	localhost
+::1		localhost ip6-localhost ip6-loopback
+ff02::1		ip6-allnodes
+ff02::2		ip6-allrouters
+
+127.0.1.1  spine02
+
+
+/etc/default/isc-dhcp-relay
+===========================
+# Defaults for isc-dhcp-relay initscript
+# sourced by /etc/init.d/isc-dhcp-relay
+# installed at /etc/default/isc-dhcp-relay by the maintainer scripts
+
+#
+# This is a POSIX shell fragment
+#
+
+# What servers should the DHCP relay forward requests to?
+SERVERS=""
+
+# On what interfaces should the DHCP relay (dhrelay) serve DHCP requests?
+# Always include the interface towards the DHCP server.
+# This variable requires a -i for each interface configured above.
+# This will be used in the actual dhcrelay command
+# For example, "-i eth0 -i eth1"
+INTF_CMD=""
+
+# Additional options that are passed to the DHCP relay daemon?
+OPTIONS=""
+
+
+/etc/default/isc-dhcp-relay6
+============================
+# Defaults for isc-dhcp-relay6 initscript
+# sourced by /etc/init.d/isc-dhcp-relay6
+# installed at /etc/default/isc-dhcp-relay6 by the maintainer scripts
+
+#
+# This is a POSIX shell fragment
+#
+
+# Specify upstream and downstream interfaces
+# For example, "-u eth0 -l swp1"
+INTF_CMD=""
+
+# Additional options that are passed to the DHCP relay daemon?
+OPTIONS=""
+
+
+/etc/default/isc-dhcp-server
+============================
+# Defaults for isc-dhcp-server initscript
+# sourced by /etc/init.d/isc-dhcp-server
+# installed at /etc/default/isc-dhcp-server by the maintainer scripts
+
+#
+# This is a POSIX shell fragment
+#
+
+# Path to dhcpd's config file (default: /etc/dhcp/dhcpd.conf).
+#DHCPD_CONF="-cf /etc/dhcp/dhcpd.conf"
+
+# Path to dhcpd's PID file (default: /var/run/dhcpd.pid).
+#DHCPD_PID="-pf /var/run/dhcpd.pid"
+
+# Additional options to start dhcpd with.
+#	Don't use options -cf or -pf here; use DHCPD_CONF/ DHCPD_PID instead
+#OPTIONS=""
+
+# On what interfaces should the DHCP server (dhcpd) serve DHCP requests?
+#	Separate multiple interfaces with spaces, e.g. "eth0 eth1".
+INTERFACES=""
+
+
+/etc/cumulus/ports.conf
+=======================
+# ports.conf --
+#
+#   configure port speed, aggregation, and subdivision.
+#
+#   The ports in Cumulus VX are not configurable from here.
+#
+
+/etc/quagga/daemons
+===================
+zebra=yes
+bgpd=yes
+ospfd=no
+ospf6d=no
+ripd=no
+ripngd=no
+isisd=no
+pimd=no
+ldpd=no
+
+
+/etc/quagga/Quagga.conf
+=======================
+username cumulus nopassword
+!
+service integrated-vtysh-config
+!
+log file /var/log/quagga/quagga.log
+!
+log timestamp precision 6
+!
+interface swp1
+ ipv6 nd ra-interval 10
+ no ipv6 nd suppress-ra
+!
+interface swp2
+ ipv6 nd ra-interval 10
+ no ipv6 nd suppress-ra
+!
+interface swp3
+ ipv6 nd ra-interval 10
+ no ipv6 nd suppress-ra
+!
+interface swp4
+ ipv6 nd ra-interval 10
+ no ipv6 nd suppress-ra
+!
+router bgp 65020
+ bgp router-id 10.0.0.22
+ neighbor fabric peer-group
+ neighbor fabric remote-as external
+ neighbor swp1 interface peer-group fabric
+ neighbor swp2 interface peer-group fabric
+ neighbor swp3 interface peer-group fabric
+ neighbor swp4 interface peer-group fabric
+ !
+ address-family ipv4 unicast
+  network 10.0.0.22/32
+ exit-address-family
+!
+line vty
+!
+
+
+/etc/vxsnd.conf
+===============
+[common]
+# Log level is one of DEBUG, INFO, WARNING, ERROR, CRITICAL
+#loglevel = INFO
+
+# Destination for log message.  Can be a file name, 'stdout', or 'syslog'
+#logdest = syslog
+
+# log file size in bytes. Used when logdest is a file
+#logfilesize = 512000
+
+# maximum number of log files stored on disk. Used when logdest is a file
+#logbackupcount = 14
+
+# The file to write the pid.
+#pidfile = /var/run/vxsnd.pid
+
+# The file name for the unix domain socket used for mgmt.
+#udsfile = /var/run/vxsnd.sock
+
+# UDP port for vxfld control messages
+#vxfld_port = 10001
+
+# This is the address to which registration daemons send control messages for
+# registration and/or BUM packets for replication
+#svcnode_ip = 0.0.0.0
+
+# Holdtime (in seconds) for soft state. It is used when sending a
+# register msg to peers in response to learning a <vni, addr> from a
+# VXLAN data pkt
+#holdtime = 90
+
+# Local IP address to bind to for receiving inter-vxsnd control traffic
+#src_ip = 0.0.0.0
+
+[vxsnd]
+# Space separated list of IP addresses of vxsnd to share state with
+#svcnode_peers =
+
+# When set to true, the service node will listen for vxlan data traffic
+# Note: Use 1, yes, true, or on, for True and 0, no, false, or off,
+# for False
+#enable_vxlan_listen = true
+
+# When set to true, the svcnode_ip will be installed on the loopback
+# interface, and it will be withdrawn when the vxsnd is no longer in
+# service.  If set to true, the svcnode_ip configuration
+# variable must be defined.
+# Note: Use 1, yes, true, or on, for True and 0, no, false, or off,
+# for False
+#install_svcnode_ip = false
+
+# Seconds to wait before checking the database to age out stale entries
+#age_check = 90
+
+/etc/hostapd.conf
+=======================
+#### Auto-generated config file: do not edit. ####
+eap_server=0
+ieee8021x=1
+driver=wired
+interfaces=
+mab_interfaces=
+parking_vlan_interfaces=
+parking_vlan_id=
+mab_activation_delay=30
+eap_reauth_period=0
+ctrl_interface=/var/run/hostapd
+nas_identifier=localhost
+auth_server_addr=
+auth_server_port=1812
+auth_server_shared_secret=
+acct_server_addr=
+acct_server_port=1813
+acct_server_shared_secret=
+
+
+/etc/ntp.conf
+=============
+# /etc/ntp.conf, configuration for ntpd; see ntp.conf(5) for help
+
+driftfile /var/lib/ntp/ntp.drift
+
+
+# Enable this if you want statistics to be logged.
+#statsdir /var/log/ntpstats/
+
+statistics loopstats peerstats clockstats
+filegen loopstats file loopstats type day enable
+filegen peerstats file peerstats type day enable
+filegen clockstats file clockstats type day enable
+
+
+# You do need to talk to an NTP server or two (or three).
+#server ntp.your-provider.example
+
+# pool.ntp.org maps to about 1000 low-stratum NTP servers.  Your server will
+# pick a different set every time it starts up.  Please consider joining the
+# pool: <http://www.pool.ntp.org/join.html>
+server 192.168.0.254 iburst
+
+
+# Access control configuration; see /usr/share/doc/ntp-doc/html/accopt.html for
+# details.  The web page <http://support.ntp.org/bin/view/Support/AccessRestrictions>
+# might also be helpful.
+#
+# Note that "restrict" applies to both servers and clients, so a configuration
+# that might be intended to block requests from certain clients could also end
+# up blocking replies from your own upstream servers.
+
+# By default, exchange time with everybody, but don't allow configuration.
+restrict -4 default kod notrap nomodify nopeer noquery
+restrict -6 default kod notrap nomodify nopeer noquery
+
+# Local users may interrogate the ntp server more closely.
+restrict 127.0.0.1
+restrict ::1
+
+# Clients from this (example!) subnet have unlimited access, but only if
+# cryptographically authenticated.
+#restrict 192.168.123.0 mask 255.255.255.0 notrust
+
+
+# If you want to provide time to your local subnet, change the next line.
+# (Again, the address is an example only.)
+#broadcast 192.168.123.255
+
+# If you want to listen to time broadcasts on your local subnet, de-comment the
+# next lines.  Please do this only if you trust everybody on the network!
+#disable auth
+#broadcastclient
+
+# Specify interfaces, don't listen on switch ports
+interface listen eth0
+
+
+/etc/timezone
+=============
+Etc/UTC
+
+/etc/rsyslog.d/19-remotesyslog.conf
+===================================
+# This file was automatically generated by NCLU.
+
+/etc/resolv.conf
+================
+domain simulation
+search simulation
+nameserver 192.168.0.254

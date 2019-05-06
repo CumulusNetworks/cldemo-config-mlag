@@ -1,0 +1,69 @@
+nodes:
+  leaf01:
+    mgmt_ip: 192.168.0.11
+    loopback: 10.0.0.11
+    asn: 65011
+    svi_vlan_ip:
+      100: "172.16.1.253"
+    clag_role: "primary"
+  leaf02:
+    mgmt_ip: 192.168.0.12
+    loopback: 10.0.0.12
+    asn: 65012
+    svi_vlan_ip:
+      100: "172.16.1.254"
+    clag_role: "secondary"
+  leaf03:
+    mgmt_ip: 192.168.0.13
+    loopback: 10.0.0.13
+    asn: 65013
+    svi_vlan_ip:
+      200: "172.16.2.253"
+    clag_role: "primary"
+  leaf04:
+    mgmt_ip: 192.168.0.14
+    loopback: 10.0.0.14
+    asn: 65014
+    svi_vlan_ip:
+      200: "172.16.2.254"
+    clag_role: "secondary"
+  spine01:
+    loopback: 10.0.0.121
+    asn: 65020
+  spine02:
+    loopback: 10.0.0.22
+    asn: 65020
+
+shared_data:
+  1:
+    members: ["leaf01","leaf02"]
+    clag_sysmac: "44:38:39:FF:00:01"
+    svis:
+      100:
+        vrr_ip: "172.16.1.1/24"
+        vrr_mac: "00:00:5E:00:01:01"
+    host_ports:
+      server01:
+        clag_id: 1
+        ports: ["swp1"]
+        access_vlan: 100
+      server02:
+        clag_id: 2
+        ports: ["swp2"]
+        access_vlan: 100
+  2:
+    members: ["leaf03","leaf04"]
+    clag_sysmac: "44:38:39:FF:00:02"
+    svis:
+      200:
+        vrr_ip: "172.16.2.1/24"
+        vrr_mac: "00:00:5E:00:01:02"
+    host_ports:
+      server03:
+        clag_id: 1
+        ports: ["swp1"]
+        access_vlan: 200
+      server04:
+        clag_id: 2
+        ports: ["swp2"]
+        access_vlan: 200

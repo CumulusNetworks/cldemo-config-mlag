@@ -1,17 +1,55 @@
 ---
-- hosts: network
-  become: yes
+- hosts: leaf
   tasks:
-    - name: copy interfaces
-      copy: src=mlag/{{ansible_hostname}}/interfaces dest=/etc/network/
-    - name: copy FRR daemons
-      copy: src=mlag/{{ansible_hostname}}/daemons dest=/etc/frr/
-    - name: copy FRR conf
-      copy: src=mlag/{{ansible_hostname}}/frr.conf dest=/etc/frr/
-    - name: reload networking
-      command: ifreload -a
-    - name: reload FRR
-      service: name=frr state=restarted
+    - name: Configure Leafs
+      nclu:
+        template: |
+          add loopback lo ip address {{nodes[inventory_hostname].loopback}}/32
+          add bgp autonomous-system {{nodes[inventory_hostname].asn}}
+          add bgp router-id {{nodes[inventory_hostname].loopback}}
+          add bgp ipv4 unicast network {{nodes[inventory_hostname].loopback}}/32
+          add bgp neighbor fabric peer-group
+          add bgp neighbor fabric remote-as external
+          add bgp neighbor swp51-52 interface peer-group fabric
+          {% for vlan_id in nodes[inventory_hostname].svi_vlan_ip %}
+          add vlan {{vlan_id}} ip address {{nodes[inventory_hostname].svi_vlan_ip[vlan_id]}}/24
+          {% endfor %}
+
+          {% for shared_data_set in shared_data %}
+          {%   set data_set = shared_data[shared_data_set] %}
+          {%   if inventory_hostname in data_set.members %}
+          {%     for vlan_id in data_set.svis %}
+          add vlan {{vlan_id}} ip address-virtual {{data_set.svis[vlan_id].vrr_mac}} {{data_set.svis[vlan_id].vrr_ip}}
+          add bgp ipv4 unicast network {{data_set.svis[vlan_id].vrr_ip}}
+          {%     endfor %}
+          add clag peer sys-mac {{data_set.clag_sysmac}} interface swp49-50 {{nodes[inventory_hostname].clag_role}} backup-ip {% for member in data_set.members %}{% if member != inventory_hostname %}{{nodes[member].mgmt_ip}}{% endif %}{% endfor %}
+
+          {%     for bond in data_set.host_ports %}
+          add clag port bond {{bond}} interface {% for port in data_set.host_ports[bond].ports%}{{port}}{% endfor %} clag-id {{data_set.host_ports[bond].clag_id}}
+          add bond {{bond}} bridge access {{data_set.host_ports[bond].access_vlan}}
+          add bond {{bond}} stp portadminedge
+          add bond {{bond}} stp bpduguard
+          {%     endfor %}
+          {%   endif %}
+          {% endfor %}
+        commit: true
+        description: "Initial Configuration of Leafs"
+
+- hosts: spine
+  tasks:
+    - name: Configure Spines
+      nclu:
+        template: |
+          add loopback lo ip address {{nodes[inventory_hostname].loopback}}/32
+          add bgp autonomous-system {{nodes[inventory_hostname].asn}}
+          add bgp router-id {{nodes[inventory_hostname].loopback}}
+          add bgp ipv4 unicast network {{nodes[inventory_hostname].loopback}}/32
+          add bgp neighbor fabric peer-group
+          add bgp neighbor fabric remote-as external
+          add bgp neighbor swp1-4 interface peer-group fabric
+        commit: true
+        description: "Initial Configuration of Spines"
+
 
 - hosts: servers
   become: yes

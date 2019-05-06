@@ -1,0 +1,16 @@
+net add loopback lo ip address 10.0.0.12/32
+net add bgp autonomous-system 65012
+net add bgp router-id 10.0.0.12
+net add bgp ipv4 unicast network 10.0.0.12/32
+net add bgp neighbor fabric peer-group
+net add bgp neighbor fabric remote-as external
+net add bgp neighbor swp51-52 interface peer-group fabric
+net add vlan 100 ip address 172.16.1.254/24
+net add vlan 100 ip address-virtual 00:00:5E:00:01:01 172.16.1.1/24
+net add bgp ipv4 unicast network 172.16.1.1/24
+net add clag peer sys-mac 44:38:39:FF:00:01 interface swp49-50 secondary backup-ip 192.168.0.11
+net add clag port bond server1 interface swp1 clag-id 1
+net add clag port bond server2 interface swp2 clag-id 2
+net add bond server1-2 bridge access 100
+net add bond server1-2 stp portadminedge
+net add bond server1-2 stp bpduguard
