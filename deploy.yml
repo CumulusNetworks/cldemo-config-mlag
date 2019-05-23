@@ -61,7 +61,7 @@
     - name: Setup bonding module in Kernel
       command: modprobe bonding
     - name: copy interfaces
-      copy: src=mlag/{{ansible_hostname}}/interfaces dest=/etc/network/      
+      copy: src=config/{{ansible_hostname}}/interfaces dest=/etc/network/
     - name: restarts servers with their new configuration
       shell: sleep 1 && shutdown -r 0
       async: 1

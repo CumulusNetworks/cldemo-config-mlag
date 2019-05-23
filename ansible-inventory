@@ -1,10 +1,11 @@
-[leaves]
+
+[leaf]
 leaf01
 leaf02
 leaf03
 leaf04
 
-[spines]
+[spine]
 spine01
 spine02
 
@@ -15,5 +16,5 @@ server03
 server04
 
 [network:children]
-leaves
-spines
+leaf
+spine
